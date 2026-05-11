@@ -26,7 +26,7 @@ export type Database = {
           option_b: string
           option_c: string
           option_d: string
-          correct_answer: string
+          correct_answer: AnswerChoice
           order_num: number
           created_at: string
         }
@@ -37,7 +37,7 @@ export type Database = {
           option_b: string
           option_c: string
           option_d: string
-          correct_answer: string
+          correct_answer: AnswerChoice
           order_num?: number
           created_at?: string
         }
