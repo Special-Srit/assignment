@@ -14,6 +14,11 @@ export default function Home() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const correctPassword = process.env.NEXT_PUBLIC_QUIZ_PASSWORD
+    if (!correctPassword) {
+      console.error('NEXT_PUBLIC_QUIZ_PASSWORD is not configured')
+      setError('Quiz password is not configured. Contact the administrator.')
+      return
+    }
     if (password === correctPassword) {
       sessionStorage.setItem('quizAuthenticated', 'true')
       router.push('/setup')
@@ -36,6 +41,8 @@ export default function Home() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
+                aria-describedby={error ? 'password-error' : undefined}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value)
@@ -44,7 +51,7 @@ export default function Home() {
                 required
               />
               {error && (
-                <p className="text-sm text-destructive">{error}</p>
+                <p id="password-error" role="alert" className="text-sm text-destructive">{error}</p>
               )}
             </div>
             <Button type="submit" className="w-full">
