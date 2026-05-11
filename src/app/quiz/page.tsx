@@ -18,16 +18,15 @@ export default function QuizPage() {
 
   const handleAnswer = useCallback(
     (choice: AnswerChoice) => {
-      setAnswers((prev) => {
-        const updated = [...prev]
-        updated[currentIndex] = choice
-        return updated
-      })
-
       if (currentIndex < questions.length - 1) {
+        setAnswers((prev) => {
+          const updated = [...prev]
+          updated[currentIndex] = choice
+          return updated
+        })
         setCurrentIndex((i) => i + 1)
       } else {
-        // Last question answered — compute score and navigate
+        // Last question — compute score in one updater, then navigate
         setAnswers((prev) => {
           const updated = [...prev]
           updated[currentIndex] = choice
@@ -110,7 +109,8 @@ export default function QuizPage() {
 
   const question = questions[currentIndex]
   const total = questions.length
-  const progressValue = (currentIndex / total) * 100
+  const progressValue = ((currentIndex + 1) / total) * 100
+  const isAnswered = answers[currentIndex] !== null
 
   const optionLabels: { key: AnswerChoice; label: string; text: string }[] = [
     { key: 'a', label: 'A', text: question.option_a },
@@ -140,6 +140,7 @@ export default function QuizPage() {
                 variant={answers[currentIndex] === key ? 'default' : 'outline'}
                 className="w-full justify-start text-left whitespace-normal h-auto py-3"
                 onClick={() => handleAnswer(key)}
+                disabled={isAnswered && answers[currentIndex] !== key}
               >
                 <span className="font-semibold mr-2">{label}.</span>
                 <span>{text}</span>
