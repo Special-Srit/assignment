@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import type { Team } from '@/lib/types'
 
 export default function SetupPage() {
+  const [isChecking, setIsChecking] = useState(true)
   const [playerName, setPlayerName] = useState('')
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [teams, setTeams] = useState<Team[]>([])
@@ -22,6 +23,7 @@ export default function SetupPage() {
       router.replace('/')
       return
     }
+    setIsChecking(false)
 
     async function fetchTeams() {
       const { data, error } = await supabase.from('teams').select('*').order('name')
@@ -35,6 +37,8 @@ export default function SetupPage() {
 
     fetchTeams()
   }, [router])
+
+  if (isChecking) return null
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -71,7 +75,10 @@ export default function SetupPage() {
               <Input
                 id="playerName"
                 type="text"
+                autoComplete="name"
                 placeholder="Enter your name"
+                maxLength={50}
+                aria-describedby={validationError ? 'validation-error' : undefined}
                 value={playerName}
                 onChange={(e) => {
                   setPlayerName(e.target.value)
@@ -91,6 +98,7 @@ export default function SetupPage() {
                 <select
                   id="team"
                   value={selectedTeamId}
+                  aria-describedby={validationError ? 'validation-error' : undefined}
                   onChange={(e) => {
                     setSelectedTeamId(e.target.value)
                     setValidationError('')
@@ -99,17 +107,21 @@ export default function SetupPage() {
                   required
                 >
                   <option value="">Select a team</option>
-                  {teams.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
+                  {teams.length === 0 ? (
+                    <option value="" disabled>No teams available — contact the administrator</option>
+                  ) : (
+                    teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))
+                  )}
                 </select>
               )}
             </div>
 
             {validationError && (
-              <p role="alert" className="text-sm text-destructive">{validationError}</p>
+              <p id="validation-error" role="alert" className="text-sm text-destructive">{validationError}</p>
             )}
 
             <Button
