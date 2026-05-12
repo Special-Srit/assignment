@@ -79,7 +79,7 @@ export default function QuizPage() {
 
     setIsChecking(false)
 
-    const rawCount = Number(sessionStorage.getItem('questionCount') ?? '10')
+    const rawCount = parseInt(sessionStorage.getItem('questionCount') ?? '10', 10)
     const requestedCount = isNaN(rawCount) || rawCount <= 0 ? 10 : rawCount
 
     async function fetchQuestions() {
