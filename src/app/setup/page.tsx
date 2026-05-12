@@ -143,6 +143,8 @@ export default function SetupPage() {
                   <button
                     key={value}
                     type="button"
+                    aria-label={`${value} questions – ${label}`}
+                    aria-pressed={questionCount === value}
                     onClick={() => setQuestionCount(value)}
                     className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 flex-1 min-w-[52px] transition-colors ${
                       questionCount === value
