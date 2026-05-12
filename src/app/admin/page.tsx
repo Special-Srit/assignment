@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,9 +15,12 @@ import {
 import { supabase } from '@/lib/supabase'
 import type { Score, TeamScore } from '@/lib/types'
 
+// NOTE: NEXT_PUBLIC_ADMIN_PASSWORD is inlined into the client bundle at build
+// time (required by GitHub Pages static export — no server-side code available).
+// This provides lightweight access control only; the real data protection is
+// Supabase Row Level Security on the scores table.
 type ScoreWithTeam = Score & { teams: { name: string } | null }
-
-type LoadStatus = 'idle' | 'loading' | 'loaded' | 'error'
+type LoadStatus = 'loading' | 'loaded' | 'error'
 
 export default function AdminPage() {
   const [isChecking, setIsChecking] = useState(true)
@@ -28,50 +31,46 @@ export default function AdminPage() {
   const [passwordError, setPasswordError] = useState('')
 
   // Scoreboard data state
-  const [loadStatus, setLoadStatus] = useState<LoadStatus>('idle')
+  const [loadStatus, setLoadStatus] = useState<LoadStatus>('loading')
   const [scores, setScores] = useState<ScoreWithTeam[]>([])
   const [teamScores, setTeamScores] = useState<TeamScore[]>([])
 
+  const fetchScoreboard = useCallback(async () => {
+    setLoadStatus('loading')
+    try {
+      const [scoresResult, teamScoresResult] = await Promise.all([
+        supabase
+          .from('scores')
+          .select('*, teams(name)')
+          .order('score', { ascending: false }),
+        supabase
+          .from('team_scores')
+          .select('*')
+          .order('total_score', { ascending: false }),
+      ])
+
+      if (scoresResult.error || teamScoresResult.error) {
+        setLoadStatus('error')
+        return
+      }
+
+      setScores((scoresResult.data as ScoreWithTeam[]) ?? [])
+      setTeamScores(teamScoresResult.data ?? [])
+      setLoadStatus('loaded')
+    } catch {
+      setLoadStatus('error')
+    }
+  }, [])
+
   useEffect(() => {
     const alreadyAuthed = sessionStorage.getItem('adminAuthenticated') === 'true'
-    if (alreadyAuthed) {
-      setAuthenticated(true)
-    }
+    if (alreadyAuthed) setAuthenticated(true)
     setIsChecking(false)
   }, [])
 
   useEffect(() => {
-    if (!authenticated) return
-
-    async function fetchScoreboard() {
-      setLoadStatus('loading')
-      try {
-        const [scoresResult, teamScoresResult] = await Promise.all([
-          supabase
-            .from('scores')
-            .select('*, teams(name)')
-            .order('score', { ascending: false }),
-          supabase
-            .from('team_scores')
-            .select('*')
-            .order('total_score', { ascending: false }),
-        ])
-
-        if (scoresResult.error || teamScoresResult.error) {
-          setLoadStatus('error')
-          return
-        }
-
-        setScores((scoresResult.data as ScoreWithTeam[]) ?? [])
-        setTeamScores(teamScoresResult.data ?? [])
-        setLoadStatus('loaded')
-      } catch {
-        setLoadStatus('error')
-      }
-    }
-
-    fetchScoreboard()
-  }, [authenticated])
+    if (authenticated) fetchScoreboard()
+  }, [authenticated, fetchScoreboard])
 
   function handlePasswordSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -88,7 +87,12 @@ export default function AdminPage() {
     }
   }
 
-  // Prevent flash while checking sessionStorage
+  function handleLogout() {
+    sessionStorage.removeItem('adminAuthenticated')
+    setAuthenticated(false)
+    setPassword('')
+  }
+
   if (isChecking) return null
 
   // Password gate
@@ -131,8 +135,7 @@ export default function AdminPage() {
     )
   }
 
-  // Loading state
-  if (loadStatus === 'loading' || loadStatus === 'idle') {
+  if (loadStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading scoreboard...</p>
@@ -140,13 +143,13 @@ export default function AdminPage() {
     )
   }
 
-  // Error state
   if (loadStatus === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
         <p role="alert" className="text-destructive">
-          Failed to load scoreboard data. Please refresh the page.
+          Failed to load scoreboard data.
         </p>
+        <Button variant="outline" onClick={fetchScoreboard}>Retry</Button>
       </div>
     )
   }
@@ -154,13 +157,19 @@ export default function AdminPage() {
   // Scoreboard
   return (
     <div className="min-h-screen p-6 md:p-10">
-      <h1 className="text-4xl font-bold mb-8">Scoreboard</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold">Scoreboard</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchScoreboard}>Refresh</Button>
+          <Button variant="ghost" onClick={handleLogout}>Lock</Button>
+        </div>
+      </div>
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Individual Rankings */}
         <div className="flex-1">
           <h2 className="text-2xl font-semibold mb-4">Individual Rankings</h2>
-          <Table>
+          <Table aria-label="Individual rankings">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">#</TableHead>
@@ -168,7 +177,7 @@ export default function AdminPage() {
                 <TableHead>Team</TableHead>
                 <TableHead className="text-right">Score</TableHead>
                 <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">%</TableHead>
+                <TableHead className="text-right">Score %</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,10 +189,9 @@ export default function AdminPage() {
                 </TableRow>
               ) : (
                 scores.map((row, index) => {
-                  const pct =
-                    row.total_questions > 0
-                      ? Math.round((row.score / row.total_questions) * 100)
-                      : 0
+                  const pct = row.total_questions > 0
+                    ? Math.round((row.score / row.total_questions) * 100)
+                    : 0
                   return (
                     <TableRow key={row.id}>
                       <TableCell>{index + 1}</TableCell>
@@ -203,7 +211,7 @@ export default function AdminPage() {
         {/* Team Rankings */}
         <div className="flex-1">
           <h2 className="text-2xl font-semibold mb-4">Team Rankings</h2>
-          <Table>
+          <Table aria-label="Team rankings">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">#</TableHead>
