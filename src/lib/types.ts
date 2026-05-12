@@ -1,3 +1,6 @@
+// Answer choice type (defined first — referenced in table types below)
+export type AnswerChoice = 'a' | 'b' | 'c' | 'd'
+
 export type Database = {
   public: {
     Tables: {
@@ -17,6 +20,7 @@ export type Database = {
           name?: string
           created_at?: string
         }
+        Relationships: []
       }
       questions: {
         Row: {
@@ -48,10 +52,11 @@ export type Database = {
           option_b?: string
           option_c?: string
           option_d?: string
-          correct_answer?: string
+          correct_answer?: AnswerChoice
           order_num?: number
           created_at?: string
         }
+        Relationships: []
       }
       scores: {
         Row: {
@@ -78,6 +83,15 @@ export type Database = {
           total_questions?: number
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: 'scores_team_id_fkey'
+            columns: ['team_id']
+            isOneToOne: false
+            referencedRelation: 'teams'
+            referencedColumns: ['id']
+          }
+        ]
       }
     }
     Views: {
@@ -88,8 +102,12 @@ export type Database = {
           player_count: number
           total_score: number
         }
+        Relationships: []
       }
     }
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }
 
@@ -98,6 +116,3 @@ export type Team = Database['public']['Tables']['teams']['Row']
 export type Question = Database['public']['Tables']['questions']['Row']
 export type Score = Database['public']['Tables']['scores']['Row']
 export type TeamScore = Database['public']['Views']['team_scores']['Row']
-
-// Answer choice type
-export type AnswerChoice = 'a' | 'b' | 'c' | 'd'
