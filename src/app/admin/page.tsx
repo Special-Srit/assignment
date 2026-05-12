@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -98,7 +99,12 @@ export default function AdminPage() {
   // Password gate
   if (!authenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <motion.div
+        className="min-h-screen flex items-center justify-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold">Admin Access</CardTitle>
@@ -131,32 +137,47 @@ export default function AdminPage() {
             </form>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     )
   }
 
   if (loadStatus === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <motion.div
+        className="min-h-screen flex items-center justify-center"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <p className="text-muted-foreground">Loading scoreboard...</p>
-      </div>
+      </motion.div>
     )
   }
 
   if (loadStatus === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+      <motion.div
+        className="min-h-screen flex items-center justify-center flex-col gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <p role="alert" className="text-destructive">
           Failed to load scoreboard data.
         </p>
         <Button variant="outline" onClick={fetchScoreboard}>Retry</Button>
-      </div>
+      </motion.div>
     )
   }
 
   // Scoreboard
   return (
-    <div className="min-h-screen p-6 md:p-10">
+    <motion.div
+      className="min-h-screen p-6 md:p-10"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">Scoreboard</h1>
         <div className="flex gap-2">
@@ -241,6 +262,6 @@ export default function AdminPage() {
           </Table>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

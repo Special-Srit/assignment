@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -98,7 +99,12 @@ export default function ResultPage() {
   const message = getEncouragingMessage(percentage)
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <motion.div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <Card className="w-full max-w-md">
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-3xl font-bold">Quiz Complete!</CardTitle>
@@ -158,6 +164,6 @@ export default function ResultPage() {
 
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }

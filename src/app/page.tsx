@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -28,7 +29,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <motion.div
+      className="min-h-screen flex items-center justify-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Quiz Competition</CardTitle>
@@ -60,6 +66,6 @@ export default function Home() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }
