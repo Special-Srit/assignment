@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
@@ -8,6 +9,12 @@ import type { Database } from '@/lib/types'
 
 type SaveStatus = 'saving' | 'saved' | 'error'
 type ScoreInsert = Database['public']['Tables']['scores']['Insert']
+
+function getEncouragingMessage(pct: number): string {
+  if (pct >= 80) return 'Excellent!'
+  if (pct >= 50) return 'Good job!'
+  return 'Better luck next time!'
+}
 
 export default function ResultPage() {
   const [isChecking, setIsChecking] = useState(true)
@@ -27,34 +34,45 @@ export default function ResultPage() {
     const storedScore = sessionStorage.getItem('quizScore')
     const storedTotal = sessionStorage.getItem('totalQuestions')
 
-    if (
-      !authenticated ||
-      !storedPlayerName ||
-      !storedTeamId ||
-      storedScore === null ||
-      storedTotal === null
-    ) {
+    if (!authenticated || !storedPlayerName || !storedTeamId || storedScore === null || storedTotal === null) {
       router.replace('/')
       return
     }
 
     const parsedScore = Number(storedScore)
     const parsedTotal = Number(storedTotal)
-    const storedTeamName = sessionStorage.getItem('teamName') ?? ''
 
-    // Capture as local non-null variables for use in the async closure
-    const resolvedPlayerName: string = storedPlayerName
-    const resolvedTeamId: string = storedTeamId
+    if (isNaN(parsedScore) || isNaN(parsedTotal) || parsedTotal <= 0) {
+      router.replace('/')
+      return
+    }
+
+    // Capture non-null values for use in async closure
+    const resolvedPlayerName = storedPlayerName
+    const resolvedTeamId = storedTeamId
+    const resolvedTeamName = sessionStorage.getItem('teamName') ?? ''
 
     setPlayerName(resolvedPlayerName)
-    setTeamName(storedTeamName)
+    setTeamName(resolvedTeamName)
     setScore(parsedScore)
     setTotal(parsedTotal)
+
+    // StrictMode double-invoke guard — must come before setIsChecking(false)
+    if (hasSaved.current) {
+      setIsChecking(false)
+      return
+    }
+    hasSaved.current = true
     setIsChecking(false)
 
-    // Prevent double-insert in React StrictMode (double effect invocation in dev)
-    if (hasSaved.current) return
-    hasSaved.current = true
+    // Clear session keys before the async call so a tab-close mid-flight
+    // cannot leave stale keys that trigger a duplicate insert on next visit
+    sessionStorage.removeItem('quizScore')
+    sessionStorage.removeItem('totalQuestions')
+    sessionStorage.removeItem('playerName')
+    sessionStorage.removeItem('teamId')
+    sessionStorage.removeItem('teamName')
+    sessionStorage.removeItem('quizAuthenticated')
 
     async function saveScore() {
       const payload: ScoreInsert = {
@@ -63,21 +81,12 @@ export default function ResultPage() {
         score: parsedScore,
         total_questions: parsedTotal,
       }
-      const { error } = await supabase.from('scores').insert(payload)
-
-      if (error) {
+      try {
+        const { error } = await supabase.from('scores').insert(payload)
+        setSaveStatus(error ? 'error' : 'saved')
+      } catch {
         setSaveStatus('error')
-      } else {
-        setSaveStatus('saved')
       }
-
-      // Clear all quiz-related session keys regardless of save result
-      sessionStorage.removeItem('quizScore')
-      sessionStorage.removeItem('totalQuestions')
-      sessionStorage.removeItem('playerName')
-      sessionStorage.removeItem('teamId')
-      sessionStorage.removeItem('teamName')
-      sessionStorage.removeItem('quizAuthenticated')
     }
 
     saveScore()
@@ -85,14 +94,7 @@ export default function ResultPage() {
 
   if (isChecking) return null
 
-  const percentage = total > 0 ? Math.round((score / total) * 100) : 0
-
-  function getEncouragingMessage(pct: number): string {
-    if (pct >= 80) return 'Excellent!'
-    if (pct >= 50) return 'Good job!'
-    return 'Better luck next time!'
-  }
-
+  const percentage = Math.round((score / total) * 100)
   const message = getEncouragingMessage(percentage)
 
   return (
@@ -112,9 +114,12 @@ export default function ResultPage() {
           </div>
 
           {/* Large Score Display */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-7xl font-bold tabular-nums">{score}</span>
-            <span className="text-muted-foreground text-sm">out of {total}</span>
+          <div
+            className="flex flex-col items-center gap-1"
+            aria-label={`Score: ${score} out of ${total}`}
+          >
+            <span className="text-7xl font-bold tabular-nums" aria-hidden="true">{score}</span>
+            <span className="text-muted-foreground text-sm" aria-hidden="true">out of {total}</span>
           </div>
 
           {/* Percentage + Message */}
@@ -145,6 +150,11 @@ export default function ResultPage() {
               </p>
             )}
           </div>
+
+          {/* Return to start */}
+          <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
+            Back to Start
+          </Button>
 
         </CardContent>
       </Card>
