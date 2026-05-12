@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,10 +9,19 @@ import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
 import type { Team } from '@/lib/types'
 
+const COUNT_OPTIONS: { value: number; label: string }[] = [
+  { value: 3,   label: 'Quick' },
+  { value: 5,   label: 'Short' },
+  { value: 10,  label: 'Standard' },
+  { value: 20,  label: 'Long' },
+  { value: 100, label: 'Full' },
+]
+
 export default function SetupPage() {
   const [isChecking, setIsChecking] = useState(true)
   const [playerName, setPlayerName] = useState('')
   const [selectedTeamId, setSelectedTeamId] = useState('')
+  const [questionCount, setQuestionCount] = useState<number>(10)
   const [teams, setTeams] = useState<Team[]>([])
   const [loadingTeams, setLoadingTeams] = useState(true)
   const [teamsError, setTeamsError] = useState('')
@@ -58,11 +68,17 @@ export default function SetupPage() {
     sessionStorage.setItem('playerName', trimmedName)
     sessionStorage.setItem('teamId', team.id)
     sessionStorage.setItem('teamName', team.name)
+    sessionStorage.setItem('questionCount', String(questionCount))
     router.push('/quiz')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <motion.div
+      className="min-h-screen flex items-center justify-center p-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">Player Setup</CardTitle>
@@ -120,6 +136,27 @@ export default function SetupPage() {
               )}
             </div>
 
+            <div className="flex flex-col gap-2">
+              <Label>Number of Questions</Label>
+              <div className="flex gap-2 flex-wrap">
+                {COUNT_OPTIONS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setQuestionCount(value)}
+                    className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 flex-1 min-w-[52px] transition-colors ${
+                      questionCount === value
+                        ? 'border-2 border-foreground bg-muted font-bold'
+                        : 'border border-border bg-background hover:bg-muted/50'
+                    }`}
+                  >
+                    <span className="text-base font-bold leading-none">{value}</span>
+                    <span className="text-[10px] text-muted-foreground leading-none">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {validationError && (
               <p id="validation-error" role="alert" className="text-sm text-destructive">{validationError}</p>
             )}
@@ -134,6 +171,6 @@ export default function SetupPage() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }
