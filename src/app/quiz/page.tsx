@@ -1,11 +1,31 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, type Variants } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { supabase } from '@/lib/supabase'
 import type { Question, AnswerChoice } from '@/lib/types'
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+const answerContainerVariants: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+}
+
+const answerItemVariants: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+}
 
 export default function QuizPage() {
   const [isChecking, setIsChecking] = useState(true)
@@ -26,7 +46,6 @@ export default function QuizPage() {
         })
         setCurrentIndex((i) => i + 1)
       } else {
-        // Last question — compute score in one updater, then navigate
         setAnswers((prev) => {
           const updated = [...prev]
           updated[currentIndex] = choice
@@ -44,7 +63,6 @@ export default function QuizPage() {
   )
 
   useEffect(() => {
-    // Auth + session guard
     const authenticated = sessionStorage.getItem('quizAuthenticated') === 'true'
     const playerName = sessionStorage.getItem('playerName')
     const teamId = sessionStorage.getItem('teamId')
@@ -54,13 +72,15 @@ export default function QuizPage() {
       return
     }
 
-    // No re-entry: if quiz already completed, go to result
     if (sessionStorage.getItem('quizScore') !== null) {
       router.replace('/result')
       return
     }
 
     setIsChecking(false)
+
+    const rawCount = Number(sessionStorage.getItem('questionCount') ?? '10')
+    const requestedCount = isNaN(rawCount) || rawCount <= 0 ? 10 : rawCount
 
     async function fetchQuestions() {
       const { data, error } = await supabase
@@ -72,8 +92,11 @@ export default function QuizPage() {
         setLoadError('Failed to load questions. Please refresh and try again.')
       } else {
         const qs = data ?? []
-        setQuestions(qs)
-        setAnswers(new Array<AnswerChoice | null>(qs.length).fill(null))
+        const selected = requestedCount >= qs.length
+          ? qs
+          : shuffle(qs).slice(0, requestedCount)
+        setQuestions(selected)
+        setAnswers(new Array<AnswerChoice | null>(selected.length).fill(null))
       }
       setLoading(false)
     }
@@ -85,25 +108,40 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <motion.div
+        className="min-h-screen flex flex-col items-center justify-center p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <p className="text-muted-foreground">Loading questions...</p>
-      </div>
+      </motion.div>
     )
   }
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <motion.div
+        className="min-h-screen flex flex-col items-center justify-center p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <p role="alert" className="text-destructive">{loadError}</p>
-      </div>
+      </motion.div>
     )
   }
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <motion.div
+        className="min-h-screen flex flex-col items-center justify-center p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      >
         <p className="text-muted-foreground">No questions available.</p>
-      </div>
+      </motion.div>
     )
   }
 
@@ -120,35 +158,54 @@ export default function QuizPage() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <motion.div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
       <Card className="w-full max-w-lg">
         <CardHeader className="pb-2">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Question {currentIndex + 1} of {total}</span>
-            </div>
-            <Progress value={progressValue} aria-label={`Quiz progress: question ${currentIndex + 1} of ${total}`} />
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Question {currentIndex + 1} of {total}</span>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <CardTitle className="text-xl leading-snug">{question.question_text}</CardTitle>
+          <p className="text-xl font-semibold leading-snug">{question.question_text}</p>
 
-          <div className="flex flex-col gap-3">
+          <motion.div
+            key={currentIndex}
+            className="flex flex-col gap-3"
+            variants={answerContainerVariants}
+            initial="hidden"
+            animate="show"
+          >
             {optionLabels.map(({ key, label, text }) => (
-              <Button
+              <motion.div
                 key={key}
-                variant={answers[currentIndex] === key ? 'default' : 'outline'}
-                className="w-full justify-start text-left whitespace-normal h-auto py-3"
-                onClick={() => handleAnswer(key)}
-                disabled={isAnswered && answers[currentIndex] !== key}
+                variants={answerItemVariants}
+                whileHover={{ scale: 1.02, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
+                whileTap={{ scale: 0.98, transition: { type: 'spring', stiffness: 400, damping: 25 } }}
               >
-                <span className="font-semibold mr-2">{label}.</span>
-                <span>{text}</span>
-              </Button>
+                <Button
+                  variant={answers[currentIndex] === key ? 'default' : 'outline'}
+                  className="w-full justify-start text-left whitespace-normal h-auto py-3"
+                  onClick={() => handleAnswer(key)}
+                  disabled={isAnswered && answers[currentIndex] !== key}
+                >
+                  <span className="font-semibold mr-2">{label}.</span>
+                  <span>{text}</span>
+                </Button>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
+
+          <Progress
+            value={progressValue}
+            aria-label={`Quiz progress: question ${currentIndex + 1} of ${total}`}
+          />
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }
