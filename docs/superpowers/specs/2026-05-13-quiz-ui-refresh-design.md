@@ -47,6 +47,25 @@ Four shapes rendered inside the same fixed layer. Each is a filled `div` with `p
 
 All shapes use `pointer-events: none` and `user-select: none`.
 
+### Shape Float Animation
+Each shape floats independently using a CSS keyframe animation — slow, organic, like drifting in water. Use `motion.div` from Framer Motion with `animate` cycling between two Y/X/rotation positions on an infinite loop.
+
+Each shape gets a slightly different duration and starting phase so they don't move in sync:
+
+| Shape | Duration | Y range | X range | Rotation drift |
+|---|---|---|---|---|
+| Circle top-left | 8s | 0 → −18px | 0 → 10px | none |
+| Rect bottom-right | 11s | 0 → 14px | 0 → −10px | 25° → 32° |
+| Circle middle-right | 9s | 0 → −12px | 0 → 8px | none |
+| Rect middle-left | 13s | 0 → 16px | 0 → −6px | −15° → −22° |
+
+Animation config per shape:
+```ts
+animate={{ y: [0, -18, 0], x: [0, 10, 0] }}
+transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+```
+`ease: 'easeInOut'` gives the slow-in / slow-out feel of floating in water. No abrupt direction changes.
+
 ---
 
 ## 3. Framer Motion Animations
