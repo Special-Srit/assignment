@@ -20,9 +20,9 @@ type AnswerRecord = {
 }
 
 function getEncouragingMessage(pct: number): string {
-  if (pct >= 80) return 'Excellent!'
-  if (pct >= 50) return 'Good job!'
-  return 'Better luck next time!'
+  if (pct >= 80) return '훌륭해요! 🎉'
+  if (pct >= 50) return '잘했어요! 👍'
+  return '다음엔 더 잘할 수 있어요! 💪'
 }
 
 export default function ResultPage() {
@@ -123,7 +123,7 @@ export default function ResultPage() {
     >
       <Card className="w-full max-w-md">
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-3xl font-bold">Quiz Complete!</CardTitle>
+          <CardTitle className="text-3xl font-bold">퀴즈 완료!</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6 pt-2">
 
@@ -131,17 +131,17 @@ export default function ResultPage() {
           <div className="text-center">
             <p className="text-lg font-semibold">{playerName}</p>
             {teamName && (
-              <p className="text-sm text-muted-foreground mt-1">Team: {teamName}</p>
+              <p className="text-sm text-muted-foreground mt-1">팀: {teamName}</p>
             )}
           </div>
 
           {/* Large Score Display */}
           <div
             className="flex flex-col items-center gap-1"
-            aria-label={`Score: ${score} out of ${total}`}
+            aria-label={`점수: ${score}/${total}`}
           >
             <span className="text-7xl font-bold tabular-nums" aria-hidden="true">{score}</span>
-            <span className="text-muted-foreground text-sm" aria-hidden="true">out of {total}</span>
+            <span className="text-muted-foreground text-sm" aria-hidden="true">{total}문제 중</span>
           </div>
 
           {/* Percentage + Message */}
@@ -154,28 +154,28 @@ export default function ResultPage() {
             </Badge>
             <p className="text-xl font-medium">{message}</p>
             <p className="text-sm text-muted-foreground text-center">
-              You scored {score} out of {total} questions correctly.
+              {total}문제 중 {score}문제를 맞혔습니다.
             </p>
           </div>
 
           {/* Save Status */}
           <div className="w-full border-t pt-4 text-center">
             {saveStatus === 'saving' && (
-              <p className="text-sm text-muted-foreground">Saving your score...</p>
+              <p className="text-sm text-muted-foreground">점수 저장 중...</p>
             )}
             {saveStatus === 'saved' && (
-              <p className="text-sm text-green-600 font-medium">Score saved!</p>
+              <p className="text-sm text-green-600 font-medium">점수가 저장되었습니다!</p>
             )}
             {saveStatus === 'error' && (
               <p role="alert" className="text-sm text-destructive">
-                Failed to save score. Your result was {score}/{total} ({percentage}%).
+                점수 저장에 실패했습니다. 결과: {score}/{total} ({percentage}%)
               </p>
             )}
           </div>
 
           {/* Return to start */}
           <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
-            Back to Start
+            처음으로
           </Button>
 
           {/* Review answers toggle */}
@@ -186,7 +186,7 @@ export default function ResultPage() {
                 className="w-full text-muted-foreground"
                 onClick={() => setShowReview((v) => !v)}
               >
-                {showReview ? 'Hide' : 'Review'} Answers
+                답안 {showReview ? '숨기기' : '확인'}
               </Button>
 
               {showReview && (
@@ -223,7 +223,7 @@ export default function ResultPage() {
                               }`}
                             >
                               {key.toUpperCase()}. {item.options[key]}
-                              {isCorrect && !item.correct && ' ← correct'}
+                              {isCorrect && !item.correct && ' ← 정답'}
                             </div>
                           )
                         })}

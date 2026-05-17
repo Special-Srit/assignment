@@ -17,14 +17,14 @@ export default function Home() {
     const correctPassword = process.env.NEXT_PUBLIC_QUIZ_PASSWORD
     if (!correctPassword) {
       console.error('NEXT_PUBLIC_QUIZ_PASSWORD is not configured')
-      setError('Quiz password is not configured. Contact the administrator.')
+      setError('퀴즈 비밀번호가 설정되지 않았습니다. 관리자에게 문의하세요.')
       return
     }
     if (password === correctPassword) {
       sessionStorage.setItem('quizAuthenticated', 'true')
       router.push('/setup')
     } else {
-      setError('Incorrect password. Please try again.')
+      setError('비밀번호가 올바르지 않습니다. 다시 시도하세요.')
     }
   }
 
@@ -37,13 +37,13 @@ export default function Home() {
     >
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Quiz Competition</CardTitle>
-          <CardDescription>Enter the quiz password to continue</CardDescription>
+          <CardTitle className="text-3xl font-bold">퀴즈 대회</CardTitle>
+          <CardDescription>계속하려면 퀴즈 비밀번호를 입력하세요</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">비밀번호</Label>
               <Input
                 id="password"
                 type="password"
@@ -61,7 +61,7 @@ export default function Home() {
               )}
             </div>
             <Button type="submit" className="w-full">
-              Enter Quiz
+              퀴즈 입장
             </Button>
           </form>
         </CardContent>

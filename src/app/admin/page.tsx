@@ -77,14 +77,14 @@ export default function AdminPage() {
     e.preventDefault()
     const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
     if (!adminPassword) {
-      setPasswordError('Admin password is not configured. Contact the administrator.')
+      setPasswordError('관리자 비밀번호가 설정되지 않았습니다.')
       return
     }
     if (password === adminPassword) {
       sessionStorage.setItem('adminAuthenticated', 'true')
       setAuthenticated(true)
     } else {
-      setPasswordError('Incorrect password. Please try again.')
+      setPasswordError('비밀번호가 올바르지 않습니다. 다시 시도하세요.')
     }
   }
 
@@ -107,12 +107,12 @@ export default function AdminPage() {
       >
         <Card className="w-full max-w-sm">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold">Admin Access</CardTitle>
+            <CardTitle className="text-3xl font-bold">관리자 접근</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="admin-password">Password</Label>
+                <Label htmlFor="admin-password">비밀번호</Label>
                 <Input
                   id="admin-password"
                   type="password"
@@ -132,7 +132,7 @@ export default function AdminPage() {
                 )}
               </div>
               <Button type="submit" className="w-full">
-                View Scoreboard
+                점수판 보기
               </Button>
             </form>
           </CardContent>
@@ -149,7 +149,7 @@ export default function AdminPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        <p className="text-muted-foreground">Loading scoreboard...</p>
+        <p className="text-muted-foreground">점수판 불러오는 중...</p>
       </motion.div>
     )
   }
@@ -163,9 +163,9 @@ export default function AdminPage() {
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <p role="alert" className="text-destructive">
-          Failed to load scoreboard data.
+          점수판 데이터를 불러오지 못했습니다.
         </p>
-        <Button variant="outline" onClick={fetchScoreboard}>Retry</Button>
+        <Button variant="outline" onClick={fetchScoreboard}>다시 시도</Button>
       </motion.div>
     )
   }
@@ -179,33 +179,33 @@ export default function AdminPage() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold">Scoreboard</h1>
+        <h1 className="text-4xl font-bold">점수판</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchScoreboard}>Refresh</Button>
-          <Button variant="ghost" onClick={handleLogout}>Lock</Button>
+          <Button variant="outline" onClick={fetchScoreboard}>새로고침</Button>
+          <Button variant="ghost" onClick={handleLogout}>잠금</Button>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Individual Rankings */}
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold mb-4">Individual Rankings</h2>
-          <Table aria-label="Individual rankings">
+          <h2 className="text-2xl font-semibold mb-4">개인 순위</h2>
+          <Table aria-label="개인 순위">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">#</TableHead>
-                <TableHead>Player Name</TableHead>
-                <TableHead>Team</TableHead>
-                <TableHead className="text-right">Score</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Score %</TableHead>
+                <TableHead>참가자</TableHead>
+                <TableHead>팀</TableHead>
+                <TableHead className="text-right">점수</TableHead>
+                <TableHead className="text-right">총 문제</TableHead>
+                <TableHead className="text-right">정답률</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {scores.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No scores yet.
+                    아직 점수가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -231,21 +231,21 @@ export default function AdminPage() {
 
         {/* Team Rankings */}
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold mb-4">Team Rankings</h2>
-          <Table aria-label="Team rankings">
+          <h2 className="text-2xl font-semibold mb-4">팀 순위</h2>
+          <Table aria-label="팀 순위">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">#</TableHead>
-                <TableHead>Team Name</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Total Score</TableHead>
+                <TableHead>팀명</TableHead>
+                <TableHead className="text-right">참가자 수</TableHead>
+                <TableHead className="text-right">총점</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {teamScores.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No team scores yet.
+                    아직 팀 점수가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (

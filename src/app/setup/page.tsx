@@ -10,11 +10,11 @@ import { supabase } from '@/lib/supabase'
 import type { Team } from '@/lib/types'
 
 const COUNT_OPTIONS: { value: number; label: string }[] = [
-  { value: 3,   label: 'Quick' },
-  { value: 5,   label: 'Short' },
-  { value: 10,  label: 'Standard' },
-  { value: 20,  label: 'Long' },
-  { value: 100, label: 'Full' },
+  { value: 3,   label: '빠르게' },
+  { value: 5,   label: '짧게' },
+  { value: 10,  label: '기본' },
+  { value: 20,  label: '길게' },
+  { value: 100, label: '전체' },
 ]
 
 export default function SetupPage() {
@@ -38,7 +38,7 @@ export default function SetupPage() {
     async function fetchTeams() {
       const { data, error } = await supabase.from('teams').select('*').order('name')
       if (error) {
-        setTeamsError('Failed to load teams. Please refresh and try again.')
+        setTeamsError('팀을 불러오지 못했습니다. 새로고침 후 다시 시도하세요.')
       } else {
         setTeams(data ?? [])
       }
@@ -55,13 +55,13 @@ export default function SetupPage() {
     const trimmedName = playerName.trim()
 
     if (!trimmedName || !selectedTeamId) {
-      setValidationError('Please enter your name and select a team.')
+      setValidationError('이름을 입력하고 팀을 선택하세요.')
       return
     }
 
     const team = teams.find((t) => t.id === selectedTeamId)
     if (!team) {
-      setValidationError('Selected team is invalid. Please try again.')
+      setValidationError('선택한 팀이 유효하지 않습니다. 다시 시도하세요.')
       return
     }
 
@@ -81,18 +81,18 @@ export default function SetupPage() {
     >
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">Player Setup</CardTitle>
-          <CardDescription>Enter your details to start the quiz</CardDescription>
+          <CardTitle className="text-3xl font-bold">참가자 설정</CardTitle>
+          <CardDescription>퀴즈를 시작하려면 정보를 입력하세요</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="playerName">Your Name</Label>
+              <Label htmlFor="playerName">이름</Label>
               <Input
                 id="playerName"
                 type="text"
                 autoComplete="name"
-                placeholder="Enter your name"
+                placeholder="이름을 입력하세요"
                 maxLength={50}
                 aria-describedby={validationError ? 'validation-error' : undefined}
                 value={playerName}
@@ -105,9 +105,9 @@ export default function SetupPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="team">Your Team</Label>
+              <Label htmlFor="team">소속 팀</Label>
               {loadingTeams ? (
-                <p className="text-sm text-muted-foreground">Loading teams...</p>
+                <p className="text-sm text-muted-foreground">팀 불러오는 중...</p>
               ) : teamsError ? (
                 <p role="alert" className="text-sm text-destructive">{teamsError}</p>
               ) : (
@@ -122,9 +122,9 @@ export default function SetupPage() {
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   required
                 >
-                  <option value="">Select a team</option>
+                  <option value="">팀을 선택하세요</option>
                   {teams.length === 0 ? (
-                    <option value="" disabled>No teams available — contact the administrator</option>
+                    <option value="" disabled>등록된 팀이 없습니다 — 관리자에게 문의하세요</option>
                   ) : (
                     teams.map((team) => (
                       <option key={team.id} value={team.id}>
@@ -137,13 +137,13 @@ export default function SetupPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Number of Questions</Label>
+              <Label>문제 수</Label>
               <div className="flex gap-2 flex-wrap">
                 {COUNT_OPTIONS.map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
-                    aria-label={`${value} questions – ${label}`}
+                    aria-label={`${value}문제 – ${label}`}
                     aria-pressed={questionCount === value}
                     onClick={() => setQuestionCount(value)}
                     className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 flex-1 min-w-[52px] transition-colors ${
@@ -168,7 +168,7 @@ export default function SetupPage() {
               className="w-full"
               disabled={loadingTeams || !!teamsError}
             >
-              Start Quiz
+              퀴즈 시작
             </Button>
           </form>
         </CardContent>

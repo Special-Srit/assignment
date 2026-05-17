@@ -98,7 +98,7 @@ export default function QuizPage() {
         .order('order_num')
 
       if (error) {
-        setLoadError('Failed to load questions. Please refresh and try again.')
+        setLoadError('문제를 불러오지 못했습니다. 새로고침 후 다시 시도하세요.')
       } else {
         const qs = data ?? []
         const selected = requestedCount >= qs.length
@@ -123,7 +123,7 @@ export default function QuizPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        <p className="text-muted-foreground">Loading questions...</p>
+        <p className="text-muted-foreground">문제 불러오는 중...</p>
       </motion.div>
     )
   }
@@ -149,7 +149,7 @@ export default function QuizPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        <p className="text-muted-foreground">No questions available.</p>
+        <p className="text-muted-foreground">등록된 문제가 없습니다.</p>
       </motion.div>
     )
   }
@@ -176,7 +176,7 @@ export default function QuizPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Question {currentIndex + 1} of {total}</span>
+            <span>{total}문제 중 {currentIndex + 1}번</span>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
@@ -211,7 +211,7 @@ export default function QuizPage() {
 
           <Progress
             value={progressValue}
-            aria-label={`Quiz progress: question ${currentIndex + 1} of ${total}`}
+            aria-label={`퀴즈 진행률: ${total}문제 중 ${currentIndex + 1}번`}
           />
         </CardContent>
       </Card>
