@@ -6,10 +6,18 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { supabase } from '@/lib/supabase'
-import type { Database } from '@/lib/types'
+import type { Database, AnswerChoice } from '@/lib/types'
 
 type SaveStatus = 'saving' | 'saved' | 'error'
 type ScoreInsert = Database['public']['Tables']['scores']['Insert']
+
+type AnswerRecord = {
+  questionText: string
+  options: Record<AnswerChoice, string>
+  userAnswer: AnswerChoice | null
+  correctAnswer: AnswerChoice
+  correct: boolean
+}
 
 function getEncouragingMessage(pct: number): string {
   if (pct >= 80) return 'Excellent!'
@@ -24,6 +32,8 @@ export default function ResultPage() {
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saving')
+  const [reviewData, setReviewData] = useState<AnswerRecord[]>([])
+  const [showReview, setShowReview] = useState(false)
   const hasSaved = useRef(false)
   const router = useRouter()
 
@@ -53,6 +63,11 @@ export default function ResultPage() {
     const resolvedTeamId = storedTeamId
     const resolvedTeamName = sessionStorage.getItem('teamName') ?? ''
 
+    const storedAnswers = sessionStorage.getItem('quizAnswers')
+    if (storedAnswers) {
+      try { setReviewData(JSON.parse(storedAnswers)) } catch { /* ignore corrupt data */ }
+    }
+
     setPlayerName(resolvedPlayerName)
     setTeamName(resolvedTeamName)
     setScore(parsedScore)
@@ -74,6 +89,7 @@ export default function ResultPage() {
     sessionStorage.removeItem('teamId')
     sessionStorage.removeItem('teamName')
     sessionStorage.removeItem('quizAuthenticated')
+    sessionStorage.removeItem('quizAnswers')
 
     async function saveScore() {
       const payload: ScoreInsert = {
@@ -161,6 +177,63 @@ export default function ResultPage() {
           <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
             Back to Start
           </Button>
+
+          {/* Review answers toggle */}
+          {reviewData.length > 0 && (
+            <div className="w-full">
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={() => setShowReview((v) => !v)}
+              >
+                {showReview ? 'Hide' : 'Review'} Answers
+              </Button>
+
+              {showReview && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="mt-3 flex flex-col gap-3"
+                >
+                  {reviewData.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`rounded-lg border p-3 text-sm ${
+                        item.correct ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2 mb-2">
+                        <span className="mt-0.5 text-base">{item.correct ? '✅' : '❌'}</span>
+                        <p className="font-medium text-foreground leading-snug">{idx + 1}. {item.questionText}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 pl-6">
+                        {(['a', 'b', 'c', 'd'] as AnswerChoice[]).map((key) => {
+                          const isUser = item.userAnswer === key
+                          const isCorrect = item.correctAnswer === key
+                          return (
+                            <div
+                              key={key}
+                              className={`px-2 py-1 rounded text-xs ${
+                                isCorrect
+                                  ? 'bg-green-100 text-green-800 font-semibold'
+                                  : isUser && !isCorrect
+                                  ? 'bg-red-100 text-red-700 line-through'
+                                  : 'text-muted-foreground'
+                              }`}
+                            >
+                              {key.toUpperCase()}. {item.options[key]}
+                              {isCorrect && !item.correct && ' ← correct'}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </div>
+          )}
 
         </CardContent>
       </Card>

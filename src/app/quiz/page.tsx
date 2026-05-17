@@ -54,6 +54,15 @@ export default function QuizPage() {
           }, 0)
           sessionStorage.setItem('quizScore', String(score))
           sessionStorage.setItem('totalQuestions', String(questions.length))
+          sessionStorage.setItem('quizAnswers', JSON.stringify(
+            questions.map((q, i) => ({
+              questionText: q.question_text,
+              options: { a: q.option_a, b: q.option_b, c: q.option_c, d: q.option_d },
+              userAnswer: updated[i],
+              correctAnswer: q.correct_answer,
+              correct: updated[i] === q.correct_answer,
+            }))
+          ))
           return updated
         })
         router.replace('/result')
